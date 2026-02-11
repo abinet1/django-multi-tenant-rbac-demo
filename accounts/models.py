@@ -2,7 +2,10 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
+from datetime import timedelta
 import uuid
+import secrets
 
 ROLE_CHOICES = (
     ('ADMIN', 'Admin'),
@@ -64,3 +67,25 @@ class User(AbstractUser):
 
     class Meta:
         db_table = 'accounts_user'
+
+
+def generate_reset_token():
+    return secrets.token_urlsafe(48)
+
+
+def reset_token_expiry():
+    return timezone.now() + timedelta(hours=1)
+
+
+class ResetToken(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='reset_token')
+    token = models.CharField(max_length=64, unique=True, default=generate_reset_token)
+    expires_at = models.DateTimeField(default=reset_token_expiry)
+    used_at = models.DateTimeField(null=True, blank=True)
+
+    def is_valid(self):
+        if self.used_at:
+            raise ValidationError('Token already used.')
+        if timezone.now() > self.expires_at:
+            raise ValidationError('Token expired.')
+        return True
