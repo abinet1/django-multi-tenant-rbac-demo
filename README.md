@@ -1,8 +1,11 @@
 # Django Multi-Tenant SaaS Backend Demo (DRF + JWT)
 
+## The Video demo is in **Video Demo** folder and Postman collection **Django Multi-Tenant Backend.postman_collection.json**
+
 **A complete implementation of the Demo Task** using Django and Django REST Framework.
 
 This project is **backend-only** (no frontend, no email sending). All flows (invitations, password reset, product sharing) return tokens directly in JSON responses for demo purposes.
+
 
 The implementation strictly follows the provided specification, including:
 - Multi-app structure
