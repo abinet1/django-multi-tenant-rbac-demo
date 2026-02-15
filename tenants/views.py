@@ -12,6 +12,7 @@ class TenantMeView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated, IsAdminOrManager]
 
     def get_object(self):
+        print("TenantMeView.get_object called for user:", self.request.user.__dict__)
         return self.request.user.tenant
 
     def get_permissions(self):

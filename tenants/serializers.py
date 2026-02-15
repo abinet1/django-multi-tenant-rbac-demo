@@ -9,9 +9,11 @@ class TenantSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'updated_at']
 
     def validate(self, data):
-        # name is read-only after creation — reject any attempt to change it
+        # Reject name change on updates (PATCH/PUT)
         if self.instance and 'name' in data:
-            raise serializers.ValidationError({"name": "Tenant name is read-only."})
+            raise serializers.ValidationError({
+                "name": "Tenant name is read-only and cannot be changed."
+            })
         return data
 
 

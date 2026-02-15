@@ -3,6 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
+from rest_framework.throttling import UserRateThrottle
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from core.permissions import IsSuperadmin, IsTenantAdmin
@@ -14,6 +15,7 @@ from .serializers import InvitationSerializer, InvitationAcceptSerializer
 class BootstrapAdminInvitationView(APIView):
     """Superadmin only — creates a tenant-admin invitation with no tenant attached."""
     permission_classes = [IsSuperadmin]
+    throttle_classes = [UserRateThrottle]
 
     def post(self, request):
         serializer = InvitationSerializer(data=request.data, context={'request': request})
@@ -29,6 +31,7 @@ class BootstrapAdminInvitationView(APIView):
 class ManagerInvitationView(APIView):
     """Admin only — creates a manager invitation scoped to the admin's tenant."""
     permission_classes = [IsTenantAdmin]
+    throttle_classes = [UserRateThrottle]
 
     def post(self, request):
         serializer = InvitationSerializer(data=request.data, context={'request': request})

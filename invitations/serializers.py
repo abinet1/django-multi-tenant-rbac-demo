@@ -49,7 +49,7 @@ class InvitationAcceptSerializer(serializers.Serializer):
             invitation = Invitation.objects.get(token=data['token'])
             invitation.is_valid()
             data['invitation'] = invitation
-
+            
             if invitation.tenant is None:  # Bootstrap admin invite
                 if not data.get('tenant_name'):
                     raise serializers.ValidationError(

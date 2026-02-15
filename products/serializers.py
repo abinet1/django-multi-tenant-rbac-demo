@@ -23,8 +23,17 @@ class ProductSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
-class PublicProductClaimSerializer(serializers.Serializer):
-    """Used by the public claim endpoint — no auth required."""
-    share_token = serializers.CharField()
-    email = serializers.EmailField()
-    password = serializers.CharField(write_only=True)
+class ProductClaimSerializer(serializers.Serializer):
+    share_token = serializers.CharField(required=True)
+    email = serializers.EmailField(required=True)
+    password = serializers.CharField(required=True, write_only=True)
+
+    def validate_share_token(self, value):
+        try:
+            product = Product.objects.get(share_token=value)
+            if product.customer is not None:
+                raise serializers.ValidationError("This product has already been claimed.")
+            self.context['product'] = product
+            return value
+        except Product.DoesNotExist:
+            raise serializers.ValidationError("Invalid share token.")

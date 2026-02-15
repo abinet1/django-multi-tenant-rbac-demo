@@ -2,13 +2,16 @@ from datetime import timedelta
 
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 import secrets
 
-from .serializers import CustomTokenObtainPairSerializer
+from core.mixins import TenantScopedMixin
+from core.permissions import IsAdminOrManager, IsTenantAdmin
+from .serializers import CustomTokenObtainPairSerializer, StaffCreateSerializer, UserSerializer
 from .models import User, ResetToken
 from .throttles import LoginRateThrottle, PasswordResetRateThrottle
 
@@ -85,3 +88,43 @@ class PasswordResetConfirmView(APIView):
                 {"detail": "Invalid or expired token."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+
+class StaffListCreateView(TenantScopedMixin, generics.ListCreateAPIView):
+    queryset = User.objects.filter(role='STAFF')
+    permission_classes = [IsAuthenticated, IsAdminOrManager]
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return StaffCreateSerializer
+        return UserSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.filter(tenant=self.request.user.tenant)
+
+
+class AdminCustomerListView(TenantScopedMixin, generics.ListAPIView):
+    queryset = User.objects.filter(role='CUSTOMER')
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated, IsTenantAdmin]
+
+    def get_queryset(self):
+        return super().get_queryset().filter(tenant=self.request.user.tenant)
+
+
+class AdminCustomerProductsView(generics.ListAPIView):
+    serializer_class = UserSerializer  # overridden below
+    permission_classes = [IsAuthenticated, IsTenantAdmin]
+
+    def get_serializer_class(self):
+        from products.serializers import ProductSerializer
+        return ProductSerializer
+
+    def get_queryset(self):
+        from products.models import Product
+        customer_id = self.kwargs['customer_id']
+        return Product.objects.filter(
+            customer_id=customer_id,
+            tenant=self.request.user.tenant,
+        )

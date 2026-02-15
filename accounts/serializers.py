@@ -41,11 +41,20 @@ class UserSerializer(serializers.ModelSerializer):
         return instance
 
 
-class StaffCreateSerializer(serializers.Serializer):
+class StaffCreateSerializer(serializers.ModelSerializer):
     """Used by Admin/Manager to create staff directly with a password."""
-    email = serializers.EmailField()
-    password = serializers.CharField(write_only=True)
-    company_id = serializers.UUIDField()
+    company_id = serializers.UUIDField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'password', 'company_id', 'role', 'tenant', 'company']
+        extra_kwargs = {
+            'password': {'write_only': True},
+            'id': {'read_only': True},
+            'role': {'read_only': True},
+            'tenant': {'read_only': True},
+            'company': {'read_only': True},
+        }
 
     def validate_company_id(self, value):
         from tenants.models import Company
@@ -54,18 +63,19 @@ class StaffCreateSerializer(serializers.Serializer):
             company = Company.objects.get(id=value, tenant=request.user.tenant)
         except Company.DoesNotExist:
             raise serializers.ValidationError("Company not found in your tenant.")
-        return company
+        return company  # returns Company instance
 
     def create(self, validated_data):
+        company = validated_data.pop('company_id')  # Company instance from validate_company_id
+        password = validated_data.pop('password')
         request = self.context['request']
-        company = validated_data['company_id']  # already resolved to Company instance
         user = User(
             email=validated_data['email'],
             role='STAFF',
             tenant=request.user.tenant,
             company=company,
         )
-        user.set_password(validated_data['password'])
+        user.set_password(password)
         user.save()
         return user
 
