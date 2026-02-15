@@ -1,4 +1,4 @@
-```markdown
+```
 # Django Multi-Tenant SaaS Backend Demo (DRF + JWT)
 
 **A complete implementation of the Demo Task** using Django and Django REST Framework.
