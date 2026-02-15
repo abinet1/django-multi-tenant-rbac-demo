@@ -1,6 +1,7 @@
 # Django Multi-Tenant SaaS Backend Demo (DRF + JWT)
 
 ## The Video demo is in **Video Demo** folder and Postman collection **Django Multi-Tenant Backend.postman_collection.json**
+## Rename **.env.example** to **.env**
 
 **A complete implementation of the Demo Task** using Django and Django REST Framework.
 
