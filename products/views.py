@@ -19,7 +19,7 @@ class ProductViewSet(TenantScopedMixin, viewsets.ModelViewSet):
     # ====================== PERMISSIONS ======================
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update']:
-            return [permissions.IsAuthenticated(), IsStaff()]
+            return [permissions.IsAuthenticated(), IsStaffInSameCompany()]
         return [permissions.IsAuthenticated()]
 
     # ====================== LIST FILTERING ======================
